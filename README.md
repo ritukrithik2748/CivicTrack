@@ -6,8 +6,8 @@
 | | |
 |---|---|
 | **Team name** | Team 4 Eyes |
-| **Team leader** | Rituk |
-| **Team members** | Rituk, Developer 2, Developer 3, Developer 4 |
+| **Team leader** | Rohiit RS |
+| **Team members** | S Ritu Krithik, Dharmik Sankabalan, Aagash Vignesh |
 | **Live demo (public link)** | https://civictrack.onrender.com |
 | **Demo video (2–5 min)** | [`/demo/demo.mp4`](./demo/demo.mp4) |
 | **Demo logins** | See [Demo accounts](#demo-accounts) |
