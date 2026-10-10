@@ -1,0 +1,315 @@
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { useProblemGroups } from '../hooks/useProblemGroups';
+
+const Groups: React.FC = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [filters, setFilters] = useState({
+    status: 'open',
+    severity: '',
+    department: '',
+    page: 1,
+    limit: 20,
+  });
+  const [sortBy, setSortBy] = useState('severity');
+  const { data: groups, isLoading, error } = useProblemGroups({
+    ...filters,
+    // Officers see only their department's groups unless they specify otherwise
+    department: user?.role === 'officer' && !filters.department ? user.department_id : filters.department,
+  });
+
+  const handleFilterChange = (field: keyof typeof filters, value: any) => {
+    setFilters((prev) => ({
+      ...prev,
+      [field]: value,
+      page: 1, // Reset to first page when changing filters
+    }));
+  };
+
+  const handleSortChange = (value: string) => {
+    setSortBy(value);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-panel flex items-center justify-center">
+        <div className="animate-pulse">
+          <div className="h-4 w-24 rounded bg-line/20 mb-2"></div>
+          <div className="h-4 w-32 rounded bg-line/20"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-panel flex items-center justify-center">
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-heading text-dtext mb-4">
+            Error Loading Issue Queue
+          </p>
+          <p className="text-body text-muted">
+            {error}
+          </p>
+          <Link
+            to="/dashboard"
+            className="inline-block mt-6 bg-moss hover:bg-moss-light text-white px-4 py-2 rounded-md"
+          >
+            Return to Dashboard
+          </p>
+        </p>
+      </p>
+    </p>
+  );
+
+  return (
+    <div className="min-h-screen bg-panel">
+      {/* Header */}
+      <header className="bg-panel border-b border-line">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between py-4">
+            <div className="flex-1">
+              <h1 className="text-2xl font-heading text-dtext mb-2">
+                Issue Queue
+              </p>
+              <p className="text-body text-muted">
+                Prioritized list of reported issues for your department
+              </p>
+            </p>
+            <div className="flex items-center space-x-3">
+              <Link
+                to="/dashboard"
+                className="px-3 py-1 rounded-md text-sm font-medium text-dtext hover:bg-panel-2"
+              >
+                ← Dashboard
+              </p>
+              <Link
+                to="/groups/new"
+                className="bg-moss hover:bg-moss-light text-white px-4 py-2 rounded-md font-medium"
+              >
+                + New Group
+              </p>
+            </p>
+          </p>
+        </p>
+      </p>
+    </p>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Filters */}
+        <div className="mb-6">
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-line">
+            <div className="flex flex-wrap gap-3 mb-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-dtext mb-2">
+                  Status
+                </p>
+                <select
+                  value={filters.status}
+                  onChange={(e) => handleFilterChange('status', e.target.value)}
+                  className="w-full px-3 py-2 rounded-border border-line focus:border-moss focus:ring-2 focus:ring-moss/20"
+                >
+                  <option value="open">Open</option>
+                  <option value="acknowledged">Acknowledged</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="reopened">Reopened</option>
+                </p>
+              </p>
+              </div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-dtext mb-2">
+                  Severity
+                </p>
+                <select
+                  value={filters.severity}
+                  onChange={(e) => handleFilterChange('severity', e.target.value)}
+                  className="w-full px-3 py-2 rounded-border border-line focus:border-moss focus:ring-2 focus:ring-moss/20"
+                >
+                  <option value="">All Severities</option>
+                  <option value="major">Major</option>
+                  <option value="moderate">Moderate</option>
+                  <option value="minor">Minor</option>
+                </p>
+              </p>
+              </div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-dtext mb-2">
+                  Department
+                </p>
+                <select
+                  value={filters.department}
+                  onChange={(e) => handleFilterChange('department', e.target.value)}
+                  className="w-full px-3 py-2 rounded-border border-line focus:border-moss focus:ring-2 focus:ring-moss/20"
+                >
+                  <option value="">All Departments</option>
+                  <option value="sewage_water">Sewage & Water</option>
+                  <option value="storm_drainage">Storm Drainage</option>
+                  <option value="electricity">Electricity</option>
+                  <option value="telecom">Telecom</option>
+                  <option value="roads">Roads</option>
+                </p>
+              </p>
+              </div>
+            </p>
+            <div className="flex items-center mt-4">
+              <button
+                onClick={() => {
+                  setFilters({
+                    status: 'open',
+                    severity: '',
+                    department: '',
+                    page: 1,
+                    limit: 20,
+                  });
+                }}
+                className="px-3 py-2 rounded-border border-line text-sm font-medium text-dtext"
+              >
+                Reset Filters
+              </p>
+            </p>
+          </p>
+        </p>
+      </p>
+
+      {/* Groups List */}
+      <div className="space-y-4">
+        {groups.length > 0 ? (
+          groups.map((group: any) => (
+            <div key={group.id} className="bg-white rounded-xl p-6 shadow-sm border border-line">
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-dtext mb-1">
+                    {group.category.replace(/_/g, ' ').toUpperCase()}
+                  </p>
+                  <p className="text-sm text-dtext mb-2">
+                    {group.department_name || 'Unknown Department'}
+                  </p>
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-dtext">Reports:</span>
+                    <span className="font-medium">
+                      {group.report_count} ({group.weighted_count.toFixed(1)} weighted)
+                    </p>
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-dtext">Severity:</span>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                      group.severity === 'major'
+                        ? 'bg-brick/20 text-brick'
+                        : group.severity === 'moderate'
+                        ? 'bg-saffron/20 text-saffron'
+                        : 'bg-lagoon/20 text-lagoon'
+                    }`}>
+                      {group.severity.toUpperCase()}
+                    </p>
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-dtext">Status:</span>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                      group.status === 'open'
+                        ? 'bg-moss/20 text-moss'
+                        : group.status === 'acknowledged'
+                        ? 'bg-saffron/20 text-saffron'
+                        : group.status === 'in_progress'
+                        ? 'bg-lagoon/20 text-lagoon'
+                        : group.status === 'resolved'
+                        ? 'bg-disputed/20 text-disputed'
+                        : 'bg-white/20 text-dtext'
+                    }`}>
+                      {group.status.replace(/_/g, ' ').toUpperCase()}
+                    </p>
+                  </p>
+                </p>
+              </p>
+              <p className="mt-2">
+                {group.severity_reason && (
+                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-moss/10 text-moss">
+                    {group.severity_reason}
+                  </p>
+                )}
+              </p>
+            </p>
+            <div className="mt-4 pt-4 border-t border-line">
+              <div className="flex justify-between">
+                <Link
+                  to={`/groups/${group.id}`}
+                  className="text-sm font-medium text-moss hover:text-moss/80"
+                >
+                  View Details
+                </p>
+                {user.role === 'officer' || user.role === 'admin' && (
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => {
+                        // Update status to acknowledged
+                        // In a real app, this would be an API call
+                      }}
+                      className="px-3 py-1 rounded-border border-line text-sm font-medium text-dtext"
+                    >
+                      Acknowledge
+                    </p>
+                    <button
+                      onClick={() => {
+                        // Update status to in_progress
+                        // In a real app, this would be an API call
+                      }}
+                      className="px-3 py-1 rounded-border border-line text-sm font-medium text-moss hover:bg-moss/10"
+                    >
+                      Start Work
+                    </p>
+                  </p>
+                )}
+              </p>
+            </p>
+          </p>
+        ))
+      ) : (
+        <div className="text-center py-12">
+          <p className="text-body text-muted">
+            No issues found matching the current filters.
+          </p>
+          <Link
+            to="/"
+            className="inline-block mt-6 bg-moss hover:bg-moss-light text-white px-4 py-2 rounded-md"
+          >
+            Explore Map
+          </p>
+        </p>
+      )}
+    </p>
+
+      {/* Pagination */}
+      {groups.length > 0 && (
+        <div className="mt-6 pt-4 border-t border-line">
+          <div className="flex justify-between">
+            <p className="text-sm text-muted">
+              Showing {groups.length} of { /* total count would come from API */ } issues
+            </p>
+            <div className="flex space-x-2">
+              <button
+                disabled={filters.page <= 1}
+                onClick={() => setFilters((prev) => ({ ...prev, page: prev.page - 1 }))}
+                className="px-3 py-2 rounded-border border-line text-sm font-medium text-dtext"
+              >
+                Previous
+              </p>
+              <button
+                disabled={false} // Would be disabled if on last page
+                onClick={() => setFilters((prev) => ({ ...prev, page: prev.page + 1 }))}
+                className="px-3 py-2 rounded-border border-line text-sm font-medium text-dtext"
+              >
+                Next
+              </p>
+            </p>
+          </p>
+        </p>
+      )}
+    </p>
+  );
+};
+
+export default Groups;

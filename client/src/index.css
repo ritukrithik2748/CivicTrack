@@ -1,0 +1,329 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+html,
+body,
+#root {
+  @apply h-full w-full m-0 p-0 overflow-x-hidden;
+}
+
+body {
+  @apply bg-paper text-ink;
+  color-scheme: light;
+}
+
+/* Force light theme for citizen view (no auto dark mode) */
+:root {
+  color-scheme: light;
+}
+
+/* Override dark mode for explicit class only */
+.dark {
+  color-scheme: dark;
+}
+
+/* ============================================================================
+   FORM CONTROLS - LIGHT THEME (CITIZEN VIEW)
+   ============================================================================ */
+
+input,
+textarea,
+select {
+  @apply bg-white text-ink border-hairline placeholder:text-ink-soft/60
+         rounded-border border px-3 py-2
+         focus:border-moss focus:ring-2 focus:ring-moss/20 focus:outline-none
+         transition-colors duration-150;
+}
+
+/* Select specific styles */
+select {
+  @apply appearance-none bg-white;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2312211D' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+  padding-right: 2.5rem;
+}
+
+/* Style option elements */
+option {
+  @apply bg-white text-ink;
+}
+
+/* Input placeholder */
+input::placeholder,
+textarea::placeholder {
+  @apply text-ink-soft/60;
+}
+
+/* Input focus */
+input:focus,
+textarea:focus,
+select:focus {
+  @apply border-moss ring-2 ring-moss/20;
+}
+
+/* Disabled state */
+input:disabled,
+textarea:disabled,
+select:disabled {
+  @apply bg-paper-2 text-ink-soft/50 cursor-not-allowed;
+}
+
+/* Invalid state */
+input:invalid:not(:placeholder-shown),
+textarea:invalid:not(:placeholder-shown) {
+  @apply border-brick focus:border-brick focus:ring-brick/20;
+}
+
+/* Textarea */
+textarea {
+  @apply resize-y min-h-[80px];
+}
+
+/* Checkbox and Radio */
+input[type="checkbox"],
+input[type="radio"] {
+  @apply w-4 h-4 text-moss border-hairline rounded
+         focus:ring-2 focus:ring-moss/20 focus:ring-offset-0
+         accent-moss;
+}
+
+input[type="radio"] {
+  @apply rounded-full;
+}
+
+/* Checkbox/Radio focus */
+input[type="checkbox"]:focus,
+input[type="radio"]:focus {
+  @apply ring-2 ring-moss/20 ring-offset-0;
+}
+
+/* File input */
+input[type="file"] {
+  @apply bg-white border-hairline rounded-border p-2 text-sm text-ink
+         focus:border-moss focus:ring-2 focus:ring-moss/20 focus:outline-none;
+}
+
+/* Date input */
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"],
+input[type="month"] {
+  @apply bg-white border-hairline rounded-border px-3 py-2 text-ink
+         focus:border-moss focus:ring-2 focus:ring-moss/20 focus:outline-none;
+}
+
+/* Range slider */
+input[type="range"] {
+  @apply w-full h-2 bg-hairline rounded-full appearance-none cursor-pointer
+         accent-moss;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  @apply appearance-none w-4 h-4 bg-moss rounded-full cursor-pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+  @apply w-4 h-4 bg-moss rounded-full cursor-pointer border-none;
+}
+
+/* ============================================================================
+   FORM CONTROLS - DARK THEME (DEPARTMENT VIEW)
+   ============================================================================ */
+
+.dark input,
+.dark textarea,
+.dark select {
+  @apply bg-panel text-dtext border-line placeholder:text-muted
+         focus:border-moss-light focus:ring-2 focus:ring-moss-light/20;
+}
+
+.dark select {
+  @apply bg-panel appearance-none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23E8EFEA' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+}
+
+.dark option {
+  @apply bg-panel text-dtext;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  @apply text-muted;
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  @apply border-moss-light ring-2 ring-moss-light/20;
+}
+
+.dark input:disabled,
+.dark textarea:disabled,
+.dark select:disabled {
+  @apply bg-panel-2 text-muted/50 cursor-not-allowed;
+}
+
+.dark input[type="checkbox"],
+.dark input[type="radio"] {
+  @apply border-line accent-moss-light;
+}
+
+.dark input[type="file"] {
+  @apply bg-panel border-line text-muted focus:border-moss-light focus:ring-moss-light/20;
+}
+
+.dark input[type="date"],
+.dark input[type="datetime-local"],
+.dark input[type="time"],
+.dark input[type="month"] {
+  @apply bg-panel border-line text-dtext focus:border-moss-light focus:ring-moss-light/20;
+}
+
+.dark input[type="range"] {
+  @apply bg-line accent-moss-light;
+}
+
+.dark input[type="range"]::-webkit-slider-thumb {
+  @apply bg-moss-light;
+}
+
+.dark input[type="range"]::-moz-range-thumb {
+  @apply bg-moss-light border-none;
+}
+
+/* ============================================================================
+   AUTOCOMPLETE / AUTO-FILL
+   ============================================================================ */
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+  box-shadow: 0 0 0 30px white inset !important;
+  -webkit-text-fill-color: #12211D !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #15201D inset !important;
+  box-shadow: 0 0 0 30px #15201D inset !important;
+  -webkit-text-fill-color: #E8EFEA !important;
+}
+
+/* ============================================================================
+   FOCUS VISIBLE
+   ============================================================================ */
+
+:focus-visible {
+  outline-offset: 2px;
+  outline: 2px solid #1F4D3F;
+}
+
+.dark :focus-visible {
+  outline: 2px solid #3E7A66;
+}
+
+/* ============================================================================
+   SCROLLBAR
+   ============================================================================ */
+
+::-webkit-scrollbar {
+  @apply w-2 h-2;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-ink-soft/20 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-ink-soft/40;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  @apply bg-muted/30;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted/50;
+}
+
+/* ============================================================================
+   SELECTION
+   ============================================================================ */
+
+::selection {
+  @apply bg-moss-light/20 text-ink;
+}
+
+.dark ::selection {
+  @apply bg-moss-light/30 text-dtext;
+}
+
+/* ============================================================================
+   SMOOTH SCROLL
+   ============================================================================ */
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* ============================================================================
+   SMOOTH TRANSITIONS
+   ============================================================================ */
+
+* {
+  @apply transition-colors duration-150;
+}
+
+/* ============================================================================
+   MAP TILE PANE FILTER (for Explore page)
+   ============================================================================ */
+
+.leaflet-tile-pane {
+  filter: sepia(0.15) saturate(0.85);
+}
+
+/* Custom styles */
+html,
+body,
+#root {
+  @apply h-full w-full m-0 p-0 overflow-x-hidden;
+}
+
+body {
+  @apply bg-paper text-ink;
+}
+
+::selection {
+  @apply bg-moss-light/20 text-ink;
+}
+
+.dark ::selection {
+  @apply bg-moss-light/30 text-dtext;
+}
+
+:focus-visible {
+  @outline-offset 2px;
+  @outline 2px solid moss;
+}
+
+.dark :focus-visible {
+  @outline 2px solid moss-light;
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}

@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: civictrack
+    env: docker
+    plan: free
+    repo: https://github.com/yourusername/civictrack # Replace with actual repo
+    branch: main
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    healthCheckPath: /api/health
+    healthCheckTimeout: 10
+    healthCheckInterval: 30
+    healthCheckRetryThreshold: 3

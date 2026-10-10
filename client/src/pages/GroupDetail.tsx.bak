@@ -1,0 +1,353 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../contexts/NotificationContext';
+import { useGroupDetail } from '../hooks/useReports';
+
+const GroupDetail: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+  const { unreadCount } = useNotifications();
+  const navigate = useNavigate();
+  const { data: group, isLoading, error } = useGroupDetail(id);
+  const [activeTab, setActiveTab] = useState<'overview' | 'reports' | 'photos' | 'workorder'>('overview');
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-panel flex items-center justify-center">
+        <div className="animate-pulse">
+          <div className="h-4 w-24 rounded bg-line/20 mb-2"></div>
+          <div className="h-4 w-32 rounded bg-line/20"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !group) {
+    return (
+      <div className="min-h-screen bg-panel flex items-center justify-center">
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-heading text-dtext mb-4">Problem Group Not Found</h2>
+          <p className="text-body text-muted">The problem group you're looking for doesn't exist.</p>
+          <Link to="/groups" className="inline-block mt-6 bg-moss hover:bg-moss-light text-white px-4 py-2 rounded-md">Return to Queue</Link>
+        </div>
+      </div>
+    );
+  }
+
+  const handleStatusUpdate = async (newStatus: string) => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/groups/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+        credentials: 'include',
+      });
+      if (response.ok) {
+        // Refetch would happen automatically in a real app with react-query
+        window.location.reload();
+      }
+    } catch (err) {
+      console.error('Failed to update status:', err);
+    }
+  };
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'major': return 'bg-brick/20 text-brick';
+      case 'moderate': return 'bg-saffron/20 text-saffron';
+      case 'minor': return 'bg-lagoon/20 text-lagoon';
+      default: return 'bg-white/20 text-dtext';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'open': return 'bg-moss/20 text-moss';
+      case 'acknowledged': return 'bg-saffron/20 text-saffron';
+      case 'in_progress': return 'bg-lagoon/20 text-lagoon';
+      case 'resolved': return 'bg-disputed/20 text-disputed';
+      case 'reopened': return 'bg-brick/20 text-brick';
+      default: return 'bg-white/20 text-dtext';
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-panel">
+      {/* Header */}
+      <header className="bg-panel border-b border-line">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between py-4">
+            <div className="flex-1">
+              <h1 className="text-2xl font-heading text-dtext mb-2">Problem Group Detail</h1>
+              <p className="text-body text-muted">Review and manage this grouped problem</p>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Link to="/dashboard" className="px-3 py-1 rounded-md text-sm font-medium text-dtext hover:bg-panel-2">← Dashboard</Link>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Group Header */}
+        <div className="mb-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-heading text-dtext mb-2">
+                {group.category.replace(/_/g, ' ').toUpperCase()}
+              </h2>
+              <p className="text-body text-muted">{group.department_name || 'Unknown Department'}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getSeverityColor(group.severity)}`}>
+                {group.severity.toUpperCase()}
+              </span>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(group.status)}`}>
+                {group.status.replace(/_/g, ' ').toUpperCase()}
+              </span>
+            </div>
+          </div>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-line">
+              <p className="text-sm text-muted mb-1">Reports</p>
+              <p className="text-2xl font-bold text-dtext">{group.report_count}</p>
+              <p className="text-xs text-muted">({group.weighted_count?.toFixed(1) || 0} weighted)</p>
+            </div>
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-line">
+              <p className="text-sm text-muted mb-1">First Reported</p>
+              <p className="text-sm font-medium text-dtext">{group.first_reported_at ? new Date(group.first_reported_at).toLocaleDateString() : 'N/A'}</p>
+            </div>
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-line">
+              <p className="text-sm text-muted mb-1">Last Reported</p>
+              <p className="text-sm font-medium text-dtext">{group.last_reported_at ? new Date(group.last_reported_at).toLocaleDateString() : 'N/A'}</p>
+            </div>
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-line">
+              <p className="text-sm text-muted mb-1">Location</p>
+              <p className="text-sm font-medium text-dtext">{group.lat?.toFixed(4)}, {group.lng?.toFixed(4)}</p>
+            </div>
+          </div>
+
+          {/* Severity Reason */}
+          {group.severity_reason && (
+            <div className="mt-4 p-4 bg-moss/10 rounded-lg border border-moss/20">
+              <p className="font-medium text-moss mb-1">Severity Reason:</p>
+              <p className="text-sm text-ink">{group.severity_reason}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Tabs */}
+        <div className="mb-6">
+          <div className="border-b border-line">
+            <nav className="flex space-x-8" aria-label="Group detail tabs">
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`py-2 border-b-2 text-sm font-medium ${activeTab === 'overview' ? 'border-moss text-moss' : 'border-transparent text-muted'}`}
+              >
+                Overview
+              </button>
+              <button
+                onClick={() => setActiveTab('reports')}
+                className={`py-2 border-b-2 text-sm font-medium ${activeTab === 'reports' ? 'border-moss text-moss' : 'border-transparent text-muted'}`}
+              >
+                Reports ({group.reports?.length || 0})
+              </button>
+              <button
+                onClick={() => setActiveTab('photos')}
+                className={`py-2 border-b-2 text-sm font-medium ${activeTab === 'photos' ? 'border-moss text-moss' : 'border-transparent text-muted'}`}
+              >
+                Photos ({group.photos?.length || 0})
+              </button>
+              {group.work_order_item && (
+                <button
+                  onClick={() => setActiveTab('workorder')}
+                  className={`py-2 border-b-2 text-sm font-medium ${activeTab === 'workorder' ? 'border-moss text-moss' : 'border-transparent text-muted'}`}
+                >
+                  Work Order
+                </button>
+              )}
+            </nav>
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'overview' && (
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-line">
+            <h3 className="text-lg font-heading text-dtext mb-4">Location & Details</h3>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <p className="text-sm text-muted mb-1">Spot Label</p>
+                <p className="font-medium text-dtext">{group.label || 'Not labeled'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted mb-1">Spot Radius</p>
+                <p className="font-medium text-dtext">{group.radius_m}m</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted mb-1">Coordinates</p>
+                <p className="font-medium text-dtext">{group.lat?.toFixed(6)}, {group.lng?.toFixed(6)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted mb-1">Department</p>
+                <p className="font-medium text-dtext">{group.department_name}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'reports' && (
+          <div className="bg-white rounded-xl shadow-sm border border-line overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-panel">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted">ID</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted">Reporter</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted">Location Source</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted">Trust</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted">Date</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {group.reports?.map((report: any) => (
+                    <tr key={report.id} className="hover:bg-panel/50">
+                      <td className="px-4 py-3 text-sm text-dtext font-mono">#{report.id.slice(0, 8)}</td>
+                      <td className="px-4 py-3 text-sm text-dtext">{report.user_name || 'Anonymous'}</td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(report.status)}`}>
+                          {report.status.replace(/_/g, ' ').toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-muted">
+                        <span className="capitalize">{report.location_source?.replace('_', ' ')}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${report.location_trust === 'high' ? 'bg-lagoon/20 text-lagoon' : 'bg-saffron/20 text-saffron'}`}>
+                          {report.location_trust?.toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-muted">{report.created_at ? new Date(report.created_at).toLocaleDateString() : 'N/A'}</td>
+                      <td className="px-4 py-3">
+                        <Link to={`/reports/${report.id}`} className="text-moss hover:text-moss/80 text-sm">View</Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'photos' && (
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-line">
+            {group.photos?.length > 0 ? (
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+                {group.photos.map((photo: any) => (
+                  <div key={photo.id} className="relative group">
+                    <img
+                      src={`/uploads/${photo.path}`}
+                      alt="Report photo"
+                      className="w-full h-48 object-cover rounded-lg"
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                    <div className="absolute bottom-2 left-2 right-2 bg-black/70 text-white text-xs p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <p>Report: #{photo.report_id?.slice(0, 8)}</p>
+                      <p>SHA256: {photo.sha256?.slice(0, 16)}...</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted">
+                <p>No photos available for this group</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'workorder' && group.work_order_item && (
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-line">
+            <h3 className="text-lg font-heading text-dtext mb-4">Work Order Item</h3>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <p className="text-sm text-muted mb-1">Department</p>
+                  <p className="font-medium text-dtext">{group.work_order_item.department_name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted mb-1">Role</p>
+                  <p className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    group.work_order_item.role === 'primary' ? 'bg-moss/20 text-moss' :
+                    group.work_order_item.role === 'secondary' ? 'bg-saffron/20 text-saffron' :
+                    'bg-lagoon/20 text-lagoon'
+                  }`}>
+                    {group.work_order_item.role.toUpperCase()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted mb-1">Sequence</p>
+                  <p className="font-medium text-dtext">{group.work_order_item.sequence_no}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted mb-1">Status</p>
+                  <p className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(group.work_order_item.status)}`}>
+                    {group.work_order_item.status.replace(/_/g, ' ').toUpperCase()}
+                  </p>
+                </div>
+              </div>
+
+              {group.work_order_item.tie_break_reason && (
+                <div className="p-3 bg-moss/10 rounded-lg">
+                  <p className="font-medium text-moss mb-1">Tie-break Reason:</p>
+                  <p className="text-sm text-dtext">{group.work_order_item.tie_break_reason}</p>
+                </div>
+              )}
+
+              {group.work_order_item.delay_reason && (
+                <div className="p-3 bg-brick/10 rounded-lg">
+                  <p className="font-medium text-brick mb-1">Delay Reason:</p>
+                  <p className="text-sm text-dtext">{group.work_order_item.delay_reason}</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-4 pt-4 border-t border-line">
+                <div>
+                  <p className="text-sm text-muted mb-1">Expected Completion</p>
+                  <p className="font-medium text-dtext">
+                    {group.work_order_item.expected_complete_at ? new Date(group.work_order_item.expected_complete_at).toLocaleString() : 'Not set'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted mb-1">Scheduled Start</p>
+                  <p className="font-medium text-dtext">
+                    {group.work_order_item.scheduled_start_at ? new Date(group.work_order_item.scheduled_start_at).toLocaleString() : 'Not scheduled'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted mb-1">Started At</p>
+                  <p className="font-medium text-dtext">
+                    {group.work_order_item.started_at ? new Date(group.work_order_item.started_at).toLocaleString() : 'Not started'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted mb-1">Completed At</p>
+                  <p className="font-medium text-dtext">
+                    {group.work_order_item.completed_at ? new Date(group.work_order_item.completed_at).toLocaleString() : 'Not completed'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default GroupDetail;
